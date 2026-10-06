@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version_name:
-        description: "Version name (e.g. 0.1.1)"
+        description: "0.01)"
         required: true
       changelog:
         description: "Release notes/changelog (optional; supports multiline)"
