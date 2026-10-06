@@ -6,28 +6,28 @@
 ## 界面预览
 
 **推荐页**
-![推荐页](./example-pic/推荐页.png)
+
 
 **分类页**
-![分类页](./example-pic/分类页.png)
+
 
 **动态页**
-![动态页](./example-pic/动态页.png)
+
 
 **直播页**
-![直播页](./example-pic/直播页.png)
+
 
 **我的页**
-![我的页](./example-pic/我的页.png)
+
 
 **搜索页**
-![搜索页](./example-pic/搜索页.png)
+
 
 **追番**
-![追番](./example-pic/追番.png)
+
 
 **视频播放页**
-![视频播放页](./example-pic/视频播放页.png)
+
 
 ## 功能概览
 
