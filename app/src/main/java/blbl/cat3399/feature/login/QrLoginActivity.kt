@@ -1,6 +1,7 @@
 package blbl.cat3399.feature.login
 
 import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.lifecycle.lifecycleScope
@@ -30,12 +31,17 @@ import kotlin.math.min
 class QrLoginActivity : BaseActivity() {
     private lateinit var binding: ActivityQrLoginBinding
     private var pollJob: Job? = null
-    private val tvLoginLocalId = "0"
+    // TV login identifies the device by local_id; the official client sends a stable
+    // per-install id. A constant like "0" is a known third-party fingerprint (issue #188).
+    private val tvLoginLocalId: String get() = BiliClient.prefs.deviceUuid
     private val tvLoginPlatform = "android"
     private val tvLoginMobiApp = "android_hd"
-    private val tvLoginUserAgent =
-        "Mozilla/5.0 BiliDroid/2.0.1 (bbcallen@gmail.com) os/android model/android_hd mobi_app/android_hd " +
-            "build/2001100 channel/master innerVer/2001100 osVer/15 network/2"
+
+    // Official clients report the real device model/os version here.
+    private val tvLoginUserAgent: String
+        get() =
+            "Mozilla/5.0 BiliDroid/2.0.1 (bbcallen@gmail.com) os/android model/${Build.MODEL} mobi_app/android_hd " +
+                "build/2001100 channel/master innerVer/2001100 osVer/${Build.VERSION.SDK_INT} network/2"
     private val passportHeaders =
         mapOf(
             "Referer" to "https://passport.bilibili.com/",
@@ -48,12 +54,20 @@ class QrLoginActivity : BaseActivity() {
             put("env", "prod")
             put("app-key", "android_hd")
             put("User-Agent", tvLoginUserAgent)
-            put("x-bili-trace-id", "11111111111111111111111111111111:1111111111111111:0:0")
+            put("x-bili-trace-id", randomTraceId())
             put("x-bili-aurora-eid", "")
             put("x-bili-aurora-zone", "")
             put("bili-http-engine", "cronet")
             put("content-type", "application/x-www-form-urlencoded; charset=utf-8")
         }
+    }
+
+    // Official clients send a fresh 32:16 hex trace id per request; the previous constant
+    // all-ones value is a strong anomaly signal for risk control (issue #188).
+    private fun randomTraceId(): String {
+        val random = java.security.SecureRandom()
+        fun hex(n: Int): String = ByteArray(n).also(random::nextBytes).joinToString("") { "%02x".format(it) }
+        return "${hex(16)}:${hex(8)}:0:0"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
