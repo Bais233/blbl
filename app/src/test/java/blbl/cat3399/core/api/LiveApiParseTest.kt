@@ -67,6 +67,38 @@ class LiveApiParseTest {
     }
 
     @Test
+    fun rewriteLiveOriginM3u8Path_should_keep_unsuffixed_new_format_key() {
+        // 2026-05+ three-segment key without a transcode suffix already serves the raw stream.
+        assertEquals(
+            "/live-bvc/566772/live_9adj_SUHXosG_228lj/index.m3u8",
+            LiveApi.rewriteLiveOriginM3u8Path("/live-bvc/566772/live_9adj_SUHXosG_228lj/index.m3u8"),
+        )
+    }
+
+    @Test
+    fun rewriteLiveOriginM3u8Path_should_strip_transcode_suffix_for_new_format_key() {
+        assertEquals(
+            "/live-bvc/928088/live_3jajh_SzmjXiJ_zs2s/index.m3u8",
+            LiveApi.rewriteLiveOriginM3u8Path("/live-bvc/928088/live_3jajh_SzmjXiJ_zs2s_2500/index.m3u8"),
+        )
+        assertEquals(
+            "/live-bvc/462762/live_2bjdxm_SOaLVHf_124l9j.m3u8",
+            LiveApi.rewriteLiveOriginM3u8Path("/live-bvc/462762/live_2bjdxm_SOaLVHf_124l9j_minihevc.m3u8"),
+        )
+    }
+
+    @Test
+    fun tryBuildLiveOriginHlsUrl_should_rewrite_new_format_key() {
+        assertEquals(
+            "https://d1--cn-gotcha204.bilivideo.com/live-bvc/566772/live_9adj_SUHXosG_228lj/index.m3u8",
+            LiveApi.tryBuildLiveOriginHlsUrl(
+                host = "https://d1--cn-gotcha204.bilivideo.com",
+                baseUrl = "/live-bvc/566772/live_9adj_SUHXosG_228lj/index.m3u8?",
+            ),
+        )
+    }
+
+    @Test
     fun tryBuildLiveOriginHlsUrl_should_drop_query_and_keep_signed_fallback_for_non_hls() {
         val host = "https://d1--cn-gotcha204b.bilivideo.com"
         assertEquals(

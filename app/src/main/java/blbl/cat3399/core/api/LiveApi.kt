@@ -12,11 +12,22 @@ import org.json.JSONObject
 
 internal object LiveApi {
     private const val LIVE_AREAS_CACHE_TTL_MS = 12 * 60 * 60 * 1000L // 12h
-    private val LIVE_ORIGIN_INDEX_M3U8_REGEX = Regex("""(/live-bvc/\d+/live_\d+_\d+)(?:_[^/]+)?(/index\.m3u8)$""")
-    private val LIVE_ORIGIN_M3U8_REGEX = Regex("""(/live-bvc/\d+/live_\d+_\d+)(?:_[^/\.]+)?(\.m3u8)$""")
+    // Room stream key: legacy "live_<digits>_<digits>", or the 2026-05+ format
+    // "live_<alnum>_<alnum>_<alnum-with-letter>" (e.g. live_9adj_SUHXosG_228lj, issue #186).
+    // Trailing "_<suffix>" segments (e.g. _2500, _minihevc) mark transcoded variants and are dropped.
+    private const val LIVE_STREAM_KEY_PATTERN =
+        """(?:live_\d+_\d+|live_[0-9A-Za-z]+_[0-9A-Za-z]+_[0-9A-Za-z]*[A-Za-z][0-9A-Za-z]*)"""
+    private val LIVE_ORIGIN_INDEX_M3U8_REGEX =
+        Regex("""(/live-bvc/\d+/)($LIVE_STREAM_KEY_PATTERN)(?:_[^/.]+)?(/index\.m3u8)$""")
+    private val LIVE_ORIGIN_M3U8_REGEX =
+        Regex("""(/live-bvc/\d+/)($LIVE_STREAM_KEY_PATTERN)(?:_[^/.]+)?(\.m3u8)$""")
     // Issue #35: Prefer known-good origin hosts instead of rewriting every API host.
     // Keep this list small and easy to extend.
     private val LIVE_ORIGIN_HOST_OVERRIDES = listOf("https://d1--cn-gotcha204.bilivideo.com")
+
+    // Issue #186: presence of 超清 (qn=250) in a room's accept list means the stream is
+    // transcoded; rooms with only 原画 (qn=10000) serve the raw stream directly.
+    private const val LIVE_QN_TRANSCODED_MARKER = 250
 
     private data class LiveAreasCache(
         val fetchedAtMs: Long,
@@ -342,7 +353,10 @@ internal object LiveApi {
             }.distinct()
         val baseUrl = codec.optString("base_url", "").trim()
         val urlInfo = codec.optJSONArray("url_info") ?: JSONArray()
-        val enableHighBitrate = highBitrateEnabled
+        // Issue #186: only reroute to the origin host when the room actually has transcoded
+        // variants (accept list contains 超清 qn=250). Rooms offering only 原画 already stream
+        // raw, and the unsigned origin url can stutter on smaller rooms — keep the signed url.
+        val enableHighBitrate = highBitrateEnabled && acceptQn.contains(LIVE_QN_TRANSCODED_MARKER)
         // Prefer the known-good origin host(s) first (higher bitrate), keep signed candidates as fallback.
         // This is gated by caller/session because some rooms/CDNs may reject the rewritten url.
         val originUrls = ArrayList<String>(LIVE_ORIGIN_HOST_OVERRIDES.size + 1)
@@ -400,12 +414,12 @@ internal object LiveApi {
         return when {
             lower.endsWith("/index.m3u8") ->
                 LIVE_ORIGIN_INDEX_M3U8_REGEX.replace(p) { m ->
-                    m.groupValues[1] + m.groupValues[2]
+                    m.groupValues[1] + m.groupValues[2] + m.groupValues[3]
                 }
 
             lower.endsWith(".m3u8") ->
                 LIVE_ORIGIN_M3U8_REGEX.replace(p) { m ->
-                    m.groupValues[1] + m.groupValues[2]
+                    m.groupValues[1] + m.groupValues[2] + m.groupValues[3]
                 }
 
             else -> p
