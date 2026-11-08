@@ -2,6 +2,7 @@ package blbl.cat3399.core.api.video.app
 
 import bilibili.app.playerunite.v1.PlayViewUniteReq
 import bilibili.pgc.gateway.player.v2.CodeType as PgcCodeType
+import bilibili.pgc.gateway.player.v2.DataControl
 import bilibili.pgc.gateway.player.v2.PlayViewReq
 import bilibili.playershared.CodeType
 import bilibili.playershared.VideoVod
@@ -95,7 +96,13 @@ internal class AppVideoApi(
                         .setVoiceBalance(1)
                         .build(),
                 )
-                .apply { request.bvid?.trim()?.takeIf { it.isNotBlank() }?.let(::setBvid) }
+                .apply {
+                    request.bvid?.trim()?.takeIf { it.isNotBlank() }?.let(::setBvid)
+                    // Official-app style spm context; without it the server omits the
+                    // watch-history section used for auto-resume (issue #181).
+                    setSpmid(SPMID_UGC_PLAY)
+                    setFromSpmid(SPMID_UGC_PLAY)
+                }
                 .build()
         return mapper.parseUgcPlayStream(reply = grpcTransport.playUgc(req), request = request)
     }
@@ -116,6 +123,10 @@ internal class AppVideoApi(
                         .setForceHost(FORCE_HOST_DEFAULT)
                         .setDownload(0)
                         .setPreferCodecType(codecType)
+                        .setSpmid(SPMID_PGC_PLAY)
+                        .setFromSpmid(SPMID_PGC_PLAY)
+                        // Official apps set this to receive userStatus.watchProgress for resume.
+                        .setDataControl(DataControl.newBuilder().setNeedWatchProgress(true).build())
                         .apply { request.cid?.takeIf { it > 0L }?.let(::setCid) }
                         .build()
                 mapper.parsePgcPlayStream(reply = grpcTransport.playPgc(req), request = request)
@@ -188,5 +199,10 @@ internal class AppVideoApi(
         private const val GRPC_QN_ALL = 127L
         private const val FORCE_HOST_DEFAULT = 0
         private const val FORCE_HOST_HTTPS = 2
+
+        // Official-app player spm values; the server uses them to attribute the playback
+        // session and populate the watch-history sections the player reads for auto-resume.
+        private const val SPMID_UGC_PLAY = "main.ugc-video-detail.0.0.pv"
+        private const val SPMID_PGC_PLAY = "main.pgc-video-detail.0.0.pv"
     }
 }

@@ -27,7 +27,11 @@ import org.json.JSONObject
 
 private const val AUTO_SKIP_LOG_TAG = "PlayerAutoSkip"
 private const val AUTO_RESUME_LOG_TAG = "PlayerAutoResume"
-private const val AUTO_RESUME_FALLBACK_TIMEOUT_MS = 1_200L
+// The playerInfo fallback is the only resume source when the playurl reply omits the
+// history section (common with the App 接口, issue #181). It includes cookie maintenance
+// and WBI signing, so 1.2s frequently timed out on slower networks and silently skipped
+// the resume. Only reached when no faster resume source matched.
+private const val AUTO_RESUME_FALLBACK_TIMEOUT_MS = 3_000L
 
 internal fun PlayerActivity.autoSkipCategoryLabel(category: String?): String {
     val c = category?.trim().orEmpty()
