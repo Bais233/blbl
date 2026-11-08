@@ -17,7 +17,9 @@ android {
     }
 
     defaultConfig {
-        applicationId = "blbl.cat3399"
+        // Renamed from upstream's blbl.cat3399 so this fork installs alongside it;
+        // namespace stays blbl.cat3399 to avoid touching code and layouts.
+        applicationId = "blbl.bais233"
         minSdk = 21
         targetSdk = 36
         versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 1
