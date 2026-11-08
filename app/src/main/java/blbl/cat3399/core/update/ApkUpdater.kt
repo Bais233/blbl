@@ -26,9 +26,12 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
 object ApkUpdater {
-    private const val DEBUG_APK_URL = "https://cat3399.top/blbl/blbl-latest-debug.apk"
-    private const val RELEASE_APK_URL = "https://cat3399.top/blbl/blbl-latest-release.apk"
-    private const val CHANGELOG_URL = "https://cat3399.top/blbl/CHANGELOG.md"
+    // Fork release channel: GitHub Releases of Bais233/blbl.
+    // android-debug.yml uploads every build as app-debug.apk; android-release.yml as
+    // app-release.apk, so the "latest/download" aliases stay stable across versions.
+    private const val DEBUG_APK_URL = "https://github.com/Bais233/blbl/releases/latest/download/app-debug.apk"
+    private const val RELEASE_APK_URL = "https://github.com/Bais233/blbl/releases/latest/download/app-release.apk"
+    private const val CHANGELOG_URL = "https://raw.githubusercontent.com/Bais233/blbl/main/CHANGELOG.md"
     val TEST_APK_URL: String
         get() = if (BuildConfig.DEBUG) DEBUG_APK_URL else RELEASE_APK_URL
     val TEST_CHANGELOG_URL: String
@@ -178,8 +181,8 @@ object ApkUpdater {
 
     fun apkUrlFor(versionName: String): String {
         val cleanVersion = versionName.trim().removePrefix("v")
-        val channel = if (BuildConfig.DEBUG) "debug" else "release"
-        return "https://cat3399.top/blbl/blbl-$cleanVersion-$channel.apk"
+        val channel = if (BuildConfig.DEBUG) "app-debug.apk" else "app-release.apk"
+        return "https://github.com/Bais233/blbl/releases/download/v$cleanVersion/$channel"
     }
 
     private data class VersionHeading(

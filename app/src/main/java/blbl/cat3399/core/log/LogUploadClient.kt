@@ -52,6 +52,10 @@ object LogUploadClient {
         fileName: String = file.name,
         onProgress: ((sentBytes: Long, totalBytes: Long) -> Unit)? = null,
     ): UploadResult {
+        // Fork builds have no log-receiving server; never upload user logs to the
+        // upstream endpoint. Use 「导出日志」 to share the zip manually instead.
+        throw IOException("此修改版未配置日志上传，请改用「导出日志」后自行发送文件")
+        @Suppress("UNREACHABLE_CODE")
         val f = file.takeIf { it.exists() && it.isFile } ?: throw IOException("日志文件不存在")
         val len = runCatching { f.length() }.getOrDefault(0L).coerceAtLeast(0L)
         if (len <= 0L) throw IOException("日志文件为空")

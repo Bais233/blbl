@@ -112,3 +112,5 @@ jobs:
             fi
           fi
           gh release upload "$RELEASE_TAG" "$DOWNLOAD_APK" --clobber
+          # Stable-named asset so the in-app updater's releases/latest/download URL works.
+          gh release upload "$RELEASE_TAG" "app/build/outputs/apk/release/app-release.apk" --clobber

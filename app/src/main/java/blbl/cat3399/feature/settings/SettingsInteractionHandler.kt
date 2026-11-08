@@ -1575,10 +1575,6 @@ class SettingsInteractionHandler(
 
             SettingId.ProjectUrl -> showProjectDialog()
 
-            SettingId.QqGroup -> {
-                copyToClipboard(label = "QQ交流群", text = SettingsConstants.QQ_GROUP, toastText = "已复制群号：${SettingsConstants.QQ_GROUP}")
-            }
-
             SettingId.PlayerKernelCheck -> handlePlayerKernelCheck()
 
             SettingId.CheckUpdate -> {
