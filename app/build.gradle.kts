@@ -31,6 +31,14 @@ android {
     }
 
     signingConfigs {
+        // Shared debug keystore committed to the repo: CI debug builds get a stable
+        // signature so new builds install over old ones without uninstalling.
+        create("debugFork") {
+            storeFile = rootProject.file("keystore/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
         create("release") {
             storeFile = rootProject.file("keystore/release.keystore")
             storePassword = propOrEnv("RELEASE_STORE_PASSWORD")
@@ -42,6 +50,7 @@ android {
     buildTypes {
         debug {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("debugFork")
         }
         release {
             isMinifyEnabled = true

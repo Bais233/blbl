@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.1.33
+
+1. debug 构建改用仓库内固定签名（keystore/debug.keystore），此后新版本可直接覆盖安装，无需卸载
+
 ## 0.1.32
 
 1. 「关于应用」改为本 fork 信息（项目地址指向 Bais233/blbl，移除上游 QQ 群）

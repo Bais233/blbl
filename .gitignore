@@ -15,6 +15,8 @@ local.properties
 .DS_Store
 
 *.apk
-keystore/
+# Only the real release signing material stays out of the repo; the shared
+# debug keystore is committed on purpose so CI debug builds keep a stable signature.
+keystore/release.keystore
 docs/
 libs/
