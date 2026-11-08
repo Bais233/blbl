@@ -10,8 +10,14 @@ class PlayerAutoNextTitleTest {
     }
 
     @Test
-    fun truncatesTitlesToTwelveCharactersBeforeEllipsis() {
-        assertEquals("123456789012...", formatAutoNextHintTitle("12345678901234567890", fallbackTitle = "推荐视频"))
+    fun truncatesTitlesToEighteenCharactersBeforeEllipsis() {
+        // AUTO_NEXT_TITLE_MAX_CHARS was raised 12 -> 18 (172423c) without updating this test.
+        assertEquals("123456789012345678...", formatAutoNextHintTitle("12345678901234567890", fallbackTitle = "推荐视频"))
+    }
+
+    @Test
+    fun keepsTitlesWithinMaxCharsUntruncated() {
+        assertEquals("123456789012345678", formatAutoNextHintTitle("123456789012345678", fallbackTitle = "推荐视频"))
     }
 
     @Test
