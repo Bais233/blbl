@@ -31,11 +31,16 @@ object ApkUpdater {
     // app-release.apk, so the "latest/download" aliases stay stable across versions.
     private const val DEBUG_APK_URL = "https://github.com/Bais233/blbl/releases/latest/download/app-debug.apk"
     private const val RELEASE_APK_URL = "https://github.com/Bais233/blbl/releases/latest/download/app-release.apk"
-    private const val CHANGELOG_URL = "https://raw.githubusercontent.com/Bais233/blbl/main/CHANGELOG.md"
     val TEST_APK_URL: String
         get() = if (BuildConfig.DEBUG) DEBUG_APK_URL else RELEASE_APK_URL
-    val TEST_CHANGELOG_URL: String
-        get() = CHANGELOG_URL
+
+    // raw.githubusercontent.com is DNS-poisoned on many mainland-China networks
+    // (resolves to 0.0.0.0); jsDelivr mirrors the repo file and is tried first.
+    private val CHANGELOG_URLS =
+        listOf(
+            "https://cdn.jsdelivr.net/gh/Bais233/blbl@main/CHANGELOG.md",
+            "https://raw.githubusercontent.com/Bais233/blbl/main/CHANGELOG.md",
+        )
 
     private const val COOLDOWN_MS = 5_000L
 
@@ -104,7 +109,24 @@ object ApkUpdater {
     }
 
     suspend fun fetchLatestUpdate(
-        url: String = TEST_CHANGELOG_URL,
+        url: String? = null,
+    ): RemoteUpdate {
+        val candidates = url?.let(::listOf) ?: CHANGELOG_URLS
+        var lastError: Throwable? = null
+        for (candidate in candidates) {
+            try {
+                return fetchLatestUpdateWithRetry(candidate)
+            } catch (t: CancellationException) {
+                throw t
+            } catch (t: Throwable) {
+                lastError = t
+            }
+        }
+        throw lastError ?: IllegalStateException("fetch latest version failed")
+    }
+
+    private suspend fun fetchLatestUpdateWithRetry(
+        url: String,
     ): RemoteUpdate {
         return withContext(Dispatchers.IO) {
             var lastError: Throwable? = null
