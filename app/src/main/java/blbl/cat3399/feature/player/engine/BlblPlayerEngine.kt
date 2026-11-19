@@ -8,6 +8,18 @@ internal data class EngineCapabilities(
     val subtitlesSupported: Boolean,
 )
 
+/**
+ * Outcome of a seamless video-quality switch attempt. The failure reason is surfaced
+ * to the user: a qn the server didn't provide and a codec the device can't decode are
+ * different problems and deserve different hints (#182).
+ */
+internal enum class QualitySelectResult {
+    ACCEPTED,
+    NOT_SEAMLESS,
+    NOT_AVAILABLE,
+    DECODER_UNSUPPORTED,
+}
+
 internal sealed interface PlaybackSource {
     data class Vod(
         val playable: Playable,
@@ -44,7 +56,7 @@ internal interface BlblPlayerEngine {
     val isSeamlessQualitySource: Boolean
         get() = false
 
-    fun selectVideoQuality(qn: Int): Boolean = false
+    fun selectVideoQuality(qn: Int): QualitySelectResult = QualitySelectResult.NOT_SEAMLESS
 
     var repeatMode: Int
 

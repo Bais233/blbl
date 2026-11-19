@@ -152,14 +152,14 @@ internal class ExoPlayerEngine(
     override val isSeamlessQualitySource: Boolean
         get() = seamlessQualitySource
 
-    override fun selectVideoQuality(qn: Int): Boolean {
+    override fun selectVideoQuality(qn: Int): QualitySelectResult {
         if (!seamlessQualitySource) {
             AppLog.w("QualitySwitch", "engine reject qn=$qn reason=not_seamless_source available=$seamlessAvailableQns")
-            return false
+            return QualitySelectResult.NOT_SEAMLESS
         }
         if (qn !in seamlessAvailableQns) {
             AppLog.w("QualitySwitch", "engine reject qn=$qn reason=qn_not_available available=$seamlessAvailableQns")
-            return false
+            return QualitySelectResult.NOT_AVAILABLE
         }
         val activeCodecid = currentSeamlessCodecid
         if (
@@ -168,7 +168,7 @@ internal class ExoPlayerEngine(
             isVideoTrackKnownUnsupported(qn = qn, codecid = activeCodecid)
         ) {
             AppLog.w("QualitySwitch", "engine reject qn=$qn codecid=$activeCodecid reason=decoder_unsupported")
-            return false
+            return QualitySelectResult.DECODER_UNSUPPORTED
         }
         qualitySwitchTargetQn = qn
         qualitySwitchStartedAtMs = SystemClock.elapsedRealtime()
@@ -181,7 +181,7 @@ internal class ExoPlayerEngine(
                 "QualitySwitch",
                 "controller request qn=$qn codecid=$activeCodecid pos=${exoPlayer.currentPosition} buffered=${exoPlayer.bufferedPosition}",
             )
-            return true
+            return QualitySelectResult.ACCEPTED
         }
         AppLog.i(
             "QualitySwitch",
@@ -189,7 +189,7 @@ internal class ExoPlayerEngine(
                 "buffered=${exoPlayer.bufferedPosition} state=${exoPlayer.playbackState} available=$seamlessAvailableQns",
         )
         applyPendingSeamlessVideoOverride(exoPlayer.currentTracks)
-        return true
+        return QualitySelectResult.ACCEPTED
     }
 
     private fun isVideoTrackKnownUnsupported(qn: Int, codecid: Int): Boolean {
